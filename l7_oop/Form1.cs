@@ -110,7 +110,7 @@ namespace OOP6
             {
                 DelFigures();
             }
-            else if (e.KeyCode == Keys.Up)
+            else if (e.KeyCode == Keys.W)
             {
                 foreach (CFigure figure in figures)
                 {
@@ -118,7 +118,7 @@ namespace OOP6
                 }
                 Refresh();
             }
-            else if (e.KeyCode == Keys.Down)
+            else if (e.KeyCode == Keys.S)
             {
                 foreach (CFigure figure in figures)
                 {
@@ -126,7 +126,7 @@ namespace OOP6
                 }
                 Refresh();
             }
-            else if (e.KeyCode == Keys.Left)
+            else if (e.KeyCode == Keys.A)
             {
                 foreach (CFigure figure in figures)
                 {
@@ -134,7 +134,7 @@ namespace OOP6
                 }
                 Refresh();
             }
-            else if (e.KeyCode == Keys.Right)
+            else if (e.KeyCode == Keys.D)
             {
                 foreach (CFigure figure in figures)
                 {
@@ -245,18 +245,21 @@ namespace OOP6
             {
                 case 0:
                     color = red;
+                    button5.Text = "Красный";
                     break;
                 case 1:
                     color = green;
+                    button5.Text = "Зеленый";
                     break;
                 case 2:
                     color = purple;
+                    button5.Text = "Фиолетовый";
                     break;
                 case 3:
                     color = black;
+                    button5.Text = "Черный";
                     break;
             }
-            button5.BackColor = color;
             foreach (CFigure figure in figures)
             {
                 if (figure.selected)
@@ -273,7 +276,7 @@ namespace OOP6
 
         void control_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down || e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
+            if (e.KeyCode == Keys.A || e.KeyCode == Keys.S || e.KeyCode == Keys.W || e.KeyCode == Keys.D)
             {
                 e.IsInputKey = true;
             }
@@ -382,7 +385,7 @@ namespace OOP6
         }
         private void button9_Click(object sender, EventArgs e)
         {
-            foreach(CFigure figure in figures)
+            foreach (CFigure figure in figures)
             {
                 figure.setCondition(true);
             }
@@ -398,7 +401,10 @@ namespace OOP6
             Refresh();
         }
 
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
 
+        }
     }
 }
 
