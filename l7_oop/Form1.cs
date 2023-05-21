@@ -2,6 +2,7 @@ using Microsoft.VisualBasic.Devices;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
+using System.IO;
 using System.Security.Policy;
 using System.Text;
 using System.Windows.Forms;
@@ -321,13 +322,18 @@ namespace OOP6
             {
                 figure.SelfSave(savedData);
             }
+            figures.Clear();
+            
+            
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
             saveMe();
-            File.Delete("D:\\test.txt");
-            loader.Save(savedData, "D:\\test.txt");
+
+            File.Delete("C:\\Users\\azamat\\Desktop\\test.txt");
+            loader.Save(savedData, "C:\\Users\\azamat\\Desktop\\test.txt");
+            savedData = new SavedData();
         }
         CFigure read(StreamReader sr)
         {
@@ -390,9 +396,9 @@ namespace OOP6
                 figure.setCondition(true);
             }
             DelFigures();
-
-            StreamReader sr = new StreamReader("D:\\test.txt");
-
+            figures.Clear();
+            StreamReader sr = new StreamReader("C:\\Users\\azamat\\Desktop\\test.txt");
+            
             while (!sr.EndOfStream)
             {
                 figures.Add(read(sr));
@@ -851,6 +857,8 @@ public class SaverLoader
 {
     public void Save(SavedData savedData, string way)
     {
+        
+        File.Delete(way);
         File.WriteAllLines(way, savedData.linesToWrite);
     }
 }
