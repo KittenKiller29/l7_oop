@@ -1,8 +1,9 @@
-using Microsoft.VisualBasic.Devices;
+п»їusing Microsoft.VisualBasic.Devices;
+using System;
+using System.DirectoryServices;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
-using System.IO;
 using System.Security.Policy;
 using System.Text;
 using System.Windows.Forms;
@@ -17,7 +18,9 @@ namespace OOP6
         SavedData savedData = new SavedData();
         SaverLoader loader = new SaverLoader();
 
-        private List<CFigure> figures = new List<CFigure>(); // Лист для хранения всех фигур
+        List<string> treeData = new List<string>();
+
+        private List<CFigure> figures = new List<CFigure>();
         public int objectSize = 20;
         public bool Cntrl;
 
@@ -34,12 +37,14 @@ namespace OOP6
         {
             InitializeComponent();
         }
-        private void Form1_Paint(object sender, PaintEventArgs e) // Метод отрисовки кругов
+
+
+        private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias; // Сглаживание
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             foreach (CFigure figure in figures)
             {
-                figure.SelfDraw(e.Graphics); // Метод круга для отрисовки самого себя
+                figure.SelfDraw(e.Graphics);
             }
         }
 
@@ -47,37 +52,32 @@ namespace OOP6
         {
             if (!Cntrl)
             {
-                foreach (CFigure figure in figures) // снятие выделения со всех объектов
+                foreach (CFigure figure in figures)
                 {
                     figure.setCondition(false);
                 }
 
+                CFigure newfigure = null;
                 switch (selectedFigure)
                 {
                     case 0:
-                        CCircle newcircle = new CCircle(e.X, e.Y, objectSize, color);
-                        newcircle.setCondition(true);
-                        figures.Add(newcircle);
+                        newfigure = new CCircle(e.X, e.Y, objectSize, color);
                         break;
                     case 1:
-                        CSquare newsquare = new CSquare(e.X, e.Y, objectSize, color);
-                        newsquare.setCondition(true);
-                        figures.Add((newsquare));
+                        newfigure = new CSquare(e.X, e.Y, objectSize, color);
                         break;
                     case 2:
-                        CTriangle newtriangle = new CTriangle(e.X, e.Y, objectSize, color);
-                        newtriangle.setCondition(true);
-                        figures.Add((newtriangle));
+                        newfigure = new CTriangle(e.X, e.Y, objectSize, color);
                         break;
                     case 3:
-                        CSection newsection = new CSection(e.X, e.Y, objectSize, color);
-                        newsection.setCondition(true);
-                        figures.Add((newsection));
+                        newfigure = new CSection(e.X, e.Y, objectSize, color);
                         break;
                 }
+                newfigure.setCondition(true);
+                figures.Add(newfigure);
                 Refresh();
             }
-            else if (Cntrl) // Выделение кругов, если зажат cntrl
+            else if (Cntrl)
             {
                 foreach (CFigure figure in figures)
                 {
@@ -89,6 +89,7 @@ namespace OOP6
                 }
                 Refresh();
             }
+            SyncLtoTree();
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
@@ -96,12 +97,12 @@ namespace OOP6
             objectSize = trackBar1.Value;
         }
 
-        private void Form1_KeyUp(object sender, KeyEventArgs e) // Отжатие кнопки
+        private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             checkBox1.Checked = false;
         }
 
-        private void Form1_KeyDown(object sender, KeyEventArgs e) // Нажатие кнопок delete и cntrl
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (Control.ModifierKeys == Keys.Control)
             {
@@ -192,9 +193,10 @@ namespace OOP6
         private void button3_Click(object sender, EventArgs e)
         {
             DelFigures();
+            SyncLtoTree();
         }
 
-        void DelFigures() // Метод удаления фигур
+        void DelFigures()
         {
             for (int i = 0; i < figures.Count; i++)
             {
@@ -209,11 +211,12 @@ namespace OOP6
 
         private void button4_Click(object sender, EventArgs e)
         {
-            foreach (CFigure figure in figures) // снятие выделения со всех объектов
+            foreach (CFigure figure in figures)
             {
                 figure.setCondition(false);
             }
             Refresh();
+            SyncLtoTree();
         }
 
         private void button_circle_Click(object sender, EventArgs e)
@@ -245,27 +248,28 @@ namespace OOP6
             switch (colorIndex)
             {
                 case 0:
+                    button5.Text = "РљСЂР°СЃРЅС‹Р№";
                     color = red;
-                    button5.Text = "Красный";
                     break;
                 case 1:
+                    button5.Text = "Р—РµР»РµРЅС‹Р№";
                     color = green;
-                    button5.Text = "Зеленый";
                     break;
                 case 2:
+                    button5.Text = "Р¤РёРѕР»РµС‚РѕРІС‹Р№";
                     color = purple;
-                    button5.Text = "Фиолетовый";
                     break;
                 case 3:
+                    button5.Text = "Р§РµСЂРЅС‹Р№";
                     color = black;
-                    button5.Text = "Черный";
                     break;
             }
             foreach (CFigure figure in figures)
             {
                 if (figure.selected)
-                    figure.colorF = color;
+                    figure.SetColor(color);
             }
+            SyncLtoTree();
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -277,7 +281,7 @@ namespace OOP6
 
         void control_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            if (e.KeyCode == Keys.A || e.KeyCode == Keys.S || e.KeyCode == Keys.W || e.KeyCode == Keys.D)
+            if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down || e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
             {
                 e.IsInputKey = true;
             }
@@ -285,10 +289,11 @@ namespace OOP6
 
         private void button6_Click(object sender, EventArgs e)
         {
-            foreach (CFigure figure in figures) // выделения всех объектов
+            foreach (CFigure figure in figures)
             {
                 figure.setCondition(true);
             }
+            SyncLtoTree();
             Refresh();
         }
 
@@ -303,17 +308,19 @@ namespace OOP6
                 }
             }
             newgroup.iAmGroup = true;
-            foreach (CFigure figure in newgroup.childrens)
+            for (int i = 0; i < newgroup.childrens.Count; i++)
             {
-                figures.Remove(figure);
+                figures.Remove(newgroup.childrens[i]);
             }
             figures.Add(newgroup);
+
             Refresh();
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
             Group();
+            SyncLtoTree();
         }
 
         private void saveMe()
@@ -323,16 +330,13 @@ namespace OOP6
                 figure.SelfSave(savedData);
             }
             figures.Clear();
-            
-            
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
             saveMe();
-
-            File.Delete("C:\\Users\\azamat\\Desktop\\test.txt");
-            loader.Save(savedData, "C:\\Users\\azamat\\Desktop\\test.txt");
+            File.Delete("D:\\test.txt");
+            loader.Save(savedData, "D:\\test.txt");
             savedData = new SavedData();
         }
         CFigure read(StreamReader sr)
@@ -395,28 +399,119 @@ namespace OOP6
             {
                 figure.setCondition(true);
             }
-            DelFigures();
             figures.Clear();
-            StreamReader sr = new StreamReader("C:\\Users\\azamat\\Desktop\\test.txt");
-            
+            DelFigures();
+
+            StreamReader sr = new StreamReader("D:\\test.txt");
+
             while (!sr.EndOfStream)
             {
                 figures.Add(read(sr));
             }
             sr.Close();
             Refresh();
+            SyncLtoTree();
         }
 
-        private void panel2_Paint(object sender, PaintEventArgs e)
+        TreeNode readdata(StreamReader sr)
         {
+            string line = sr.ReadLine();
+            string[] data = line.Split(';');
+            switch (data[0])
+            {
+                case "CGroup":
+                    {
+                        int count = int.Parse(data[1]);
+                        TreeNode newnode = new TreeNode();
+                        newnode.Text = data[0].ToString();
 
+                        for (int i = 0; i < count; i++)
+                        {
+                            newnode.Nodes.Add(readdata(sr));
+                        }
+                        return newnode;
+                    }
+                default:
+                    {
+                        Color color = Color.FromArgb(int.Parse(data[1]));
+                        TreeNode treeNode = new TreeNode();
+                        treeNode.Text = data[0].ToString();
+                        if (data[2] == "0")
+                        {
+                            treeNode.ForeColor = color;
+                        }
+                        else
+                        {
+                            treeNode.ForeColor = Color.Blue;
+                        }
+                        return treeNode;
+                    }
+            }
+        }
+
+        public void SyncLtoTree()
+        {
+            foreach (CFigure figure in figures)
+            {
+                figure.RetData(treeData);
+            }
+            File.WriteAllLines("D:\\tree.txt", treeData);
+            treeView1.Nodes.Clear();
+
+            StreamReader sr = new StreamReader("D:\\tree.txt");
+
+            while (!sr.EndOfStream)
+            {
+                treeView1.Nodes.Add(readdata(sr));
+            }
+            sr.Close();
+            treeData.Clear();
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            foreach (CFigure figure in figures)
+            {
+                figure.setCondition(false);
+            }
+
+            figures[e.Node.Index].setCondition(true);
+
+            SyncLtoTree();
+
+            e.Node.ForeColor = Color.Blue;
+            Refresh();
+        }
+
+        private void button3_Click_1(object sender, EventArgs e)
+        {
+            int objectsSelected = 0;
+            foreach (CFigure figure in figures)
+            {
+                if (figure.selected) objectsSelected++;
+            }
+            if (objectsSelected == 2)
+            {
+                Line line = new Line();
+                foreach (CFigure figure in figures)
+                {
+                    if (figure.selected)
+                        line.AddFigure(figure);
+                }
+                foreach (CFigure fig in line.twofigs)
+                {
+                    figures.Remove(fig);
+                }
+                figures.Add(line);
+                Refresh();
+                SyncLtoTree();
+            }
         }
     }
 }
 
 public class CFigure
 {
-    public List<CFigure> childrens;
     public Point coords;
     public int rad;
     public bool selected = false;
@@ -424,32 +519,54 @@ public class CFigure
     public bool iAmGroup = false;
 
     public Color colorT = Color.CornflowerBlue;
-    public Color colorF = Color.Purple;
+    public Color mainColor = Color.Purple;
     public virtual void Cntrled(bool pressed)
     {
         fcntrl = pressed;
     }
 
-    public virtual void setCondition(bool cond) // метод переключения выделения
+    public virtual void setCondition(bool cond)
     {
         selected = cond;
     }
-    public virtual void SelfDraw(Graphics g) // Метод для отрисовки самого себя
+    public virtual void SelfDraw(Graphics g)
     {
 
     }
-    public virtual void SelfSave(SavedData savedData) // Метод для сохранения самого себя
+
+    public virtual void SetColor(Color newcolor)
+    {
+        mainColor = newcolor;
+    }
+
+    public virtual void RetData(List<string> treeData)
     {
         StringBuilder line = new StringBuilder();
         line.Append(ToString()).Append(";");
-        line.Append(colorF.ToArgb()).Append(";");
+        line.Append(mainColor.ToArgb()).Append(";");
+        if (selected)
+        {
+            line.Append("1").Append(";");
+        }
+        else
+        {
+            line.Append("0").Append(";");
+        }
+        treeData.Add(line.ToString());
+    }
+
+    public virtual void SelfSave(SavedData savedData)
+    {
+        StringBuilder line = new StringBuilder();
+        line.Append(ToString()).Append(";");
+        line.Append(mainColor.ToArgb()).Append(";");
         line.Append(coords.X.ToString()).Append(";");
         line.Append(coords.Y.ToString()).Append(";");
         line.Append(rad.ToString()).Append(";");
         line.Append(selected.ToString()).Append(";");
         savedData.linesToWrite.Add(line.ToString());
     }
-    public virtual bool MouseCheck(MouseEventArgs e) // Проверка объекта на попадание в него курсора
+    public virtual bool MouseCheck(MouseEventArgs e)
     {
         return false;
     }
@@ -545,23 +662,23 @@ public class CFigure
     }
 
 }
-public class CCircle : CFigure// класс круга
+public class CCircle : CFigure
 {
-    public CCircle(int x, int y, int radius, Color color) // конструктор по умолчанию
+    public CCircle(int x, int y, int radius, Color color)
     {
         coords.X = x;
         coords.Y = y;
         rad = radius;
-        colorF = color;
+        mainColor = color;
     }
-    public override void SelfDraw(Graphics g) // Метод для отрисовки самого себя
+    public override void SelfDraw(Graphics g)
     {
         if (selected == true)
             g.DrawEllipse(new Pen(colorT, 3), coords.X - rad, coords.Y - rad, rad * 2, rad * 2);
         else
-            g.DrawEllipse(new Pen(colorF, 3), coords.X - rad, coords.Y - rad, rad * 2, rad * 2);
+            g.DrawEllipse(new Pen(mainColor, 3), coords.X - rad, coords.Y - rad, rad * 2, rad * 2);
     }
-    public override bool MouseCheck(MouseEventArgs e) // Проверка объекта на попадание в него курсора
+    public override bool MouseCheck(MouseEventArgs e)
     {
         if (fcntrl)
         {
@@ -576,24 +693,24 @@ public class CCircle : CFigure// класс круга
 
 }
 
-public class CSquare : CFigure // класс квадрата
+public class CSquare : CFigure
 {
-    public CSquare(int x, int y, int radius, Color color) // конструктор по умолчанию
+    public CSquare(int x, int y, int radius, Color color)
     {
         coords.X = x;
         coords.Y = y;
         rad = radius;
-        colorF = color;
+        mainColor = color;
     }
-    public override void SelfDraw(Graphics g) // Метод для отрисовки самого себя
+    public override void SelfDraw(Graphics g)
     {
         if (selected == true)
             g.DrawRectangle(new Pen(colorT, 3), coords.X - rad, coords.Y - rad, rad * 2, rad * 2);
         else
-            g.DrawRectangle(new Pen(colorF, 3), coords.X - rad, coords.Y - rad, rad * 2, rad * 2);
+            g.DrawRectangle(new Pen(mainColor, 3), coords.X - rad, coords.Y - rad, rad * 2, rad * 2);
 
     }
-    public override bool MouseCheck(MouseEventArgs e) // Проверка объекта на попадание в него курсора
+    public override bool MouseCheck(MouseEventArgs e)
     {
         if (fcntrl)
         {
@@ -607,16 +724,16 @@ public class CSquare : CFigure // класс квадрата
     }
 }
 
-public class CTriangle : CFigure // класс треугольника
+public class CTriangle : CFigure
 {
-    public CTriangle(int x, int y, int radius, Color color) // конструктор по умолчанию
+    public CTriangle(int x, int y, int radius, Color color)
     {
         coords.X = x;
         coords.Y = y;
         rad = radius;
-        colorF = color;
+        mainColor = color;
     }
-    public override void SelfDraw(Graphics g) // Метод для отрисовки самого себя
+    public override void SelfDraw(Graphics g)
     {
         Point point1 = new Point(coords.X, coords.Y - rad);
         Point point2 = new Point(coords.X + rad, coords.Y + rad);
@@ -626,9 +743,9 @@ public class CTriangle : CFigure // класс треугольника
         if (selected == true)
             g.DrawPolygon(new Pen(colorT, 3), curvePoints);
         else
-            g.DrawPolygon(new Pen(colorF, 3), curvePoints);
+            g.DrawPolygon(new Pen(mainColor, 3), curvePoints);
     }
-    public override bool MouseCheck(MouseEventArgs e) // Проверка объекта на попадание в него курсора
+    public override bool MouseCheck(MouseEventArgs e)
     {
         if (fcntrl)
         {
@@ -642,16 +759,16 @@ public class CTriangle : CFigure // класс треугольника
     }
 }
 
-public class CSection : CFigure // класс отрезка
+public class CSection : CFigure
 {
-    public CSection(int x, int y, int radius, Color color) // конструктор по умолчанию
+    public CSection(int x, int y, int radius, Color color)
     {
         coords.X = x;
         coords.Y = y;
         rad = radius;
-        colorF = color;
+        mainColor = color;
     }
-    public override void SelfDraw(Graphics g) // Метод для отрисовки самого себя
+    public override void SelfDraw(Graphics g)
     {
         Point point1 = new Point(coords.X - rad, coords.Y);
         Point point2 = new Point(coords.X + rad, coords.Y);
@@ -660,9 +777,9 @@ public class CSection : CFigure // класс отрезка
         if (selected == true)
             g.DrawPolygon(new Pen(colorT, 3), curvePoints);
         else
-            g.DrawPolygon(new Pen(colorF, 3), curvePoints);
+            g.DrawPolygon(new Pen(mainColor, 3), curvePoints);
     }
-    public override bool MouseCheck(MouseEventArgs e) // Проверка объекта на попадание в него курсора
+    public override bool MouseCheck(MouseEventArgs e)
     {
         if (fcntrl)
         {
@@ -676,7 +793,7 @@ public class CSection : CFigure // класс отрезка
     }
 }
 
-class CGroup : CFigure
+public class CGroup : CFigure
 {
     public List<CFigure> childrens = new List<CFigure>();
 
@@ -686,7 +803,6 @@ class CGroup : CFigure
     }
     public void Add(CFigure component)
     {
-        component.colorF = Color.DarkCyan;
         component.setCondition(false);
         childrens.Add(component);
     }
@@ -709,6 +825,15 @@ class CGroup : CFigure
         selected = cond;
     }
 
+    public override void SetColor(Color newcolor)
+    {
+        foreach (CFigure child in childrens)
+        {
+            child.SetColor(newcolor);
+        }
+        mainColor = newcolor;
+    }
+
     public override void SelfDraw(Graphics g)
     {
         foreach (CFigure child in childrens)
@@ -716,6 +841,19 @@ class CGroup : CFigure
             child.SelfDraw(g);
         }
     }
+
+    public override void RetData(List<string> treeData)
+    {
+        StringBuilder line = new StringBuilder();
+        line.Append(ToString()).Append(";");
+        line.Append(childrens.Count.ToString()).Append(";");
+        treeData.Add(line.ToString());
+        foreach (CFigure child in childrens)
+        {
+            child.RetData(treeData);
+        }
+    }
+
     public override void SelfSave(SavedData savedData)
     {
         StringBuilder tmp = new StringBuilder();
@@ -849,6 +987,7 @@ public class SavedData
     public List<string> linesToWrite = new List<string>();
     public void Add(string line)
     {
+
         linesToWrite.Add(line);
     }
 }
@@ -857,8 +996,141 @@ public class SaverLoader
 {
     public void Save(SavedData savedData, string way)
     {
-        
         File.Delete(way);
         File.WriteAllLines(way, savedData.linesToWrite);
     }
+}
+
+public class Line : CFigure
+{
+    public List<CFigure> twofigs = new List<CFigure>();
+    public bool f1s = false;
+    public bool f2s = false;
+
+    public void AddFigure(CFigure figure)
+    {
+        if (twofigs.Count < 2)
+        {
+            figure.setCondition(false);
+            if (twofigs.Count == 0)
+                figure.SetColor(Color.ForestGreen);
+            else
+                figure.SetColor(Color.DarkOliveGreen);
+            twofigs.Add(figure);
+        }
+    }
+
+    public override void Cntrled(bool pressed)
+    {
+        foreach (CFigure component in twofigs)
+        {
+            component.fcntrl = pressed;
+        }
+        fcntrl = pressed;
+    }
+
+    public override void setCondition(bool cond)
+    {
+        if (!selected)
+        {
+            twofigs[0].setCondition(f1s);
+            twofigs[1].setCondition(f2s);
+            selected = cond;
+        }
+        else
+        {
+            foreach (CFigure component in twofigs)
+            {
+                component.setCondition(cond);
+            }
+            selected = cond;
+            f1s = cond;
+            f2s = cond;
+        }
+    }
+
+    public override bool MouseCheck(MouseEventArgs e)
+    {
+        if (twofigs[0].MouseCheck(e))
+        {
+            f1s = true;
+            return true;
+        }
+        else if (twofigs[1].MouseCheck(e))
+        {
+            f2s = true;
+            return true;
+        }
+        else
+        {
+            f1s = false;
+            f2s = false;
+            return false;
+        }
+    }
+
+    public override void MoveUp(Form form)
+    {
+        if (twofigs[0].CanMoveUp(form) && twofigs[0].selected && !twofigs[1].selected)
+        {
+            twofigs[1].setCondition(true);
+            twofigs[0].MoveUp(form);
+            twofigs[1].MoveUp(form);
+            twofigs[1].setCondition(false);
+        }
+        else if (twofigs[1].CanMoveUp(form) && twofigs[1].selected && !twofigs[0].selected)
+        {
+            twofigs[1].MoveUp(form);
+        }
+    }
+    public override void MoveDown(Form form)
+    {
+        if (twofigs[0].CanMoveDown(form) && twofigs[0].selected && !twofigs[1].selected)
+        {
+            twofigs[1].setCondition(true);
+            twofigs[0].MoveDown(form);
+            twofigs[1].MoveDown(form);
+            twofigs[1].setCondition(false);
+        }
+        else if (twofigs[1].CanMoveDown(form) && twofigs[1].selected && !twofigs[0].selected)
+        {
+            twofigs[1].MoveDown(form);
+        }
+    }
+    public override void MoveLeft(Form form)
+    {
+        if (twofigs[0].CanMoveLeft(form) && twofigs[0].selected && !twofigs[1].selected)
+        {
+            twofigs[1].setCondition(true);
+            twofigs[0].MoveLeft(form);
+            twofigs[1].MoveLeft(form);
+            twofigs[1].setCondition(false);
+        }
+        else if (twofigs[1].CanMoveLeft(form) && twofigs[1].selected && !twofigs[0].selected)
+        {
+            twofigs[1].MoveLeft(form);
+        }
+    }
+    public override void MoveRight(Form form)
+    {
+        if (twofigs[0].CanMoveRight(form) && twofigs[0].selected && !twofigs[1].selected)
+        {
+            twofigs[1].setCondition(true);
+            twofigs[0].MoveRight(form);
+            twofigs[1].MoveRight(form);
+            twofigs[1].setCondition(false);
+        }
+        else if (twofigs[1].CanMoveRight(form) && twofigs[1].selected && !twofigs[0].selected)
+        {
+            twofigs[1].MoveRight(form);
+        }
+    }
+
+    public override void SelfDraw(Graphics g)
+    {
+        twofigs[0].SelfDraw(g);
+        twofigs[1].SelfDraw(g);
+        g.DrawLine(new Pen(twofigs[0].mainColor, 3), twofigs[0].coords, twofigs[1].coords);
+    }
+
 }

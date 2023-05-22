@@ -48,6 +48,8 @@
             label3 = new Label();
             panel1 = new Panel();
             panel2 = new Panel();
+            treeView1 = new TreeView();
+            button3_1 = new Button();
             ((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
             panel1.SuspendLayout();
             panel2.SuspendLayout();
@@ -71,7 +73,7 @@
             // 
             button1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             button1.FlatStyle = FlatStyle.Flat;
-            button1.Location = new Point(379, 403);
+            button1.Location = new Point(388, 403);
             button1.Name = "button1";
             button1.Size = new Size(197, 35);
             button1.TabIndex = 3;
@@ -296,7 +298,26 @@
             panel2.Name = "panel2";
             panel2.Size = new Size(153, 113);
             panel2.TabIndex = 21;
-            panel2.Paint += panel2_Paint;
+            // 
+            // treeView1
+            // 
+            treeView1.Location = new Point(591, 50);
+            treeView1.Name = "treeView1";
+            treeView1.Size = new Size(188, 347);
+            treeView1.TabIndex = 22;
+            treeView1.AfterSelect += treeView1_AfterSelect;
+            // 
+            // button3_1
+            // 
+            button3_1.BackgroundImageLayout = ImageLayout.Stretch;
+            button3_1.FlatStyle = FlatStyle.Flat;
+            button3_1.Location = new Point(185, 403);
+            button3_1.Name = "button3_1";
+            button3_1.Size = new Size(197, 35);
+            button3_1.TabIndex = 23;
+            button3_1.Text = "line";
+            button3_1.UseVisualStyleBackColor = true;
+            button3_1.Click += button3_Click_1;
             // 
             // Form1
             // 
@@ -304,6 +325,8 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             ClientSize = new Size(800, 450);
+            Controls.Add(button3_1);
+            Controls.Add(treeView1);
             Controls.Add(panel2);
             Controls.Add(panel1);
             Controls.Add(button_section);
@@ -351,5 +374,7 @@
         private Label label3;
         private Panel panel1;
         private Panel panel2;
+        private TreeView treeView1;
+        private Button button3_1;
     }
 }
